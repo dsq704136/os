@@ -8,8 +8,11 @@ typedef struct{
     PCB                 *head;
 } PQueue;
 
+PQueue                *timer_queue;
+PQueue                *ready_queue;
+
 void InitQueue( PQueue ** );
-void AddtoQueue( PQueue *, PCB * );
+void AddtoQueue( PQueue *, PCB *, char* );
 int RemoveFromQueue( PQueue *, PCB * );
 
 

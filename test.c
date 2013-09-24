@@ -574,7 +574,7 @@ void test1h(void) {
 	// Terminate everyone
 	TERMINATE_PROCESS(-2, &Z502_REG9);
 
-}                                               // End of test1h  
+}                                               // End of test1h
 
 /**************************************************************************
 
@@ -591,7 +591,7 @@ void test1h(void) {
  that is being rescheduled "disappears" into SwitchContext.  But
  it "reappears" after some other process causes that "disappeared"
  process to be scheduled.
- So at that "reappearing" location is a good place to put your message 
+ So at that "reappearing" location is a good place to put your message
  code so as to do the rendevous work that's necessary to match up sends
  and receives.
 
@@ -635,7 +635,7 @@ void test1i(void) {
 	TEST1I_DATA *td; // Use as ptr to data */
 
 	// Here we maintain the data to be used by this process when running
-	// on this routine.  This code should be re-entrant.              
+	// on this routine.  This code should be re-entrant.
 
 	td = (TEST1I_DATA *) calloc(1, sizeof(TEST1I_DATA));
 	if (td == 0) {
@@ -648,7 +648,7 @@ void test1i(void) {
 	GET_PROCESS_ID("", &Z502_REG2, &Z502_REG9);
 	printf("Release %s:Test 1i: Pid %ld\n", CURRENT_REL, Z502_REG2);
 
-	// Make our priority high 
+	// Make our priority high
 	CHANGE_PRIORITY(-1, MOST_FAVORABLE_PRIORITY, &Z502_REG9);
 
 	// Make a legal target
@@ -661,27 +661,27 @@ void test1i(void) {
 	SEND_MESSAGE(td->target_pid, "message", td->send_length, &Z502_REG9);
 	ErrorExpected(Z502_REG9, "SEND_MESSAGE");
 
-	// Try an illegal message length                        
+	// Try an illegal message length
 	td->target_pid = Z502_REG3;
 	td->send_length = ILLEGAL_MESSAGE_LENGTH;
 	SEND_MESSAGE(td->target_pid, "message", td->send_length, &Z502_REG9);
 	ErrorExpected(Z502_REG9, "SEND_MESSAGE");
 
-	//      Receive from illegal process                    
+	//      Receive from illegal process
 	td->source_pid = 9999;
 	td->receive_length = LEGAL_MESSAGE_LENGTH;
 	RECEIVE_MESSAGE(td->source_pid, td->msg_buffer, td->receive_length,
 			&(td->actual_send_length), &(td->actual_source_pid), &Z502_REG9);
 	ErrorExpected(Z502_REG9, "RECEIVE_MESSAGE");
 
-	//      Receive with illegal buffer size                
+	//      Receive with illegal buffer size
 	td->source_pid = Z502_REG3;
 	td->receive_length = ILLEGAL_MESSAGE_LENGTH;
 	RECEIVE_MESSAGE(td->source_pid, td->msg_buffer, td->receive_length,
 			&(td->actual_send_length), &(td->actual_source_pid), &Z502_REG9);
 	ErrorExpected(Z502_REG9, "RECEIVE_MESSAGE");
 
-	//      Send a legal ( but long ) message to self       
+	//      Send a legal ( but long ) message to self
 	td->target_pid = Z502_REG2;
 	td->send_length = LEGAL_MESSAGE_LENGTH;
 	SEND_MESSAGE(td->target_pid, "a long but legal message", td->send_length,
@@ -689,7 +689,7 @@ void test1i(void) {
 	SuccessExpected(Z502_REG9, "SEND_MESSAGE");
 	td->loop_count++;      // Count the number of legal messages sent
 
-	//   Receive this long message, which should error because the receive buffer is too small         
+	//   Receive this long message, which should error because the receive buffer is too small
 	td->source_pid = Z502_REG2;
 	td->receive_length = 10;
 	RECEIVE_MESSAGE(td->source_pid, td->msg_buffer, td->receive_length,
@@ -698,7 +698,7 @@ void test1i(void) {
 
 	// Keep sending legal messages until the architectural
 	// limit for buffer space is exhausted.  In order to pass
-	// the  test1j, this number should be at least EIGHT     
+	// the  test1j, this number should be at least EIGHT
 
 	Z502_REG9 = ERR_SUCCESS;
 	while (Z502_REG9 == ERR_SUCCESS) {
@@ -710,7 +710,7 @@ void test1i(void) {
 
 	printf("A total of %ld messages were enqueued.\n", td->loop_count - 1);
 	TERMINATE_PROCESS(-2, &Z502_REG9);
-}                                              // End of test1i     
+}                                              // End of test1i
 
 /**************************************************************************
 
@@ -770,7 +770,7 @@ typedef struct {
 
 void test1j(void) {
 	int Iteration;
-	TEST1J_DATA *td;           // Use as pointer to data 
+	TEST1J_DATA *td;           // Use as pointer to data
 
 	// Here we maintain the data to be used by this process when running
 	// on this routine.  This code should be re-entrant.                */
@@ -782,15 +782,15 @@ void test1j(void) {
 	td->send_loop_count = 0;
 	td->receive_loop_count = 0;
 
-	// Get OUR PID         
+	// Get OUR PID
 	GET_PROCESS_ID("", &Z502_REG2, &Z502_REG9);
 
-	// Make our prior high 
+	// Make our prior high
 	printf("Release %s:Test 1j: Pid %ld\n", CURRENT_REL, Z502_REG2);
 	CHANGE_PRIORITY(-1, MOST_FAVORABLE_PRIORITY, &Z502_REG9);
 	SuccessExpected(Z502_REG9, "CHANGE_PRIORITY");
 
-	// Make 3 legal targets  
+	// Make 3 legal targets
 	CREATE_PROCESS("test1j_1", test1j_echo, NORMAL_PRIORITY, &Z502_REG3,
 			&Z502_REG9);
 	SuccessExpected(Z502_REG9, "CREATE_PROCESS");
@@ -801,7 +801,7 @@ void test1j(void) {
 			&Z502_REG9);
 	SuccessExpected(Z502_REG9, "CREATE_PROCESS");
 
-	//      Send/receive a legal message to each child    
+	//      Send/receive a legal message to each child
 	for (Iteration = 0; Iteration < 3; Iteration++) {
 		if (Iteration == 3) {
 			td->target_pid = Z502_REG3;
@@ -837,7 +837,7 @@ void test1j(void) {
 	}    // End of for loop
 
 	//      Keep sending legal messages until the architectural (OS)
-	//      limit for buffer space is exhausted.     
+	//      limit for buffer space is exhausted.
 
 	Z502_REG9 = ERR_SUCCESS;
 	while (Z502_REG9 == ERR_SUCCESS) {
@@ -868,7 +868,7 @@ void test1j(void) {
 			td->receive_loop_count - 1);
 	TERMINATE_PROCESS(-2, &Z502_REG9);
 
-}                                                 // End of test1j     
+}                                                 // End of test1j
 
 /**************************************************************************
 
@@ -952,7 +952,7 @@ void test1l(void) {
 	TEST1L_DATA *td; // Use as ptr to data */
 
 	// Here we maintain the data to be used by this process when running
-	// on this routine.  This code should be re-entrant.                
+	// on this routine.  This code should be re-entrant.
 
 	td = (TEST1L_DATA *) calloc(1, sizeof(TEST1L_DATA));
 	if (td == 0) {
@@ -1173,10 +1173,10 @@ typedef struct {
 } TEST1J_ECHO_DATA;
 
 void test1j_echo(void) {
-	TEST1J_ECHO_DATA *td;                          // Use as ptr to data 
+	TEST1J_ECHO_DATA *td;                          // Use as ptr to data
 
 	// Here we maintain the data to be used by this process when running
-	// on this routine.  This code should be re-entrant.     
+	// on this routine.  This code should be re-entrant.
 
 	td = (TEST1J_ECHO_DATA *) calloc(1, sizeof(TEST1J_ECHO_DATA));
 	if (td == 0) {
@@ -1266,16 +1266,16 @@ void test2a(void) {
 		printf("AN ERROR HAS OCCURRED.\n");
 	TERMINATE_PROCESS(-1, &Z502_REG9);
 
-}                   // End of test2a   
+}                   // End of test2a
 
 /**************************************************************************
  Test2b
 
- Exercises simple memory writes and reads.  Watch out, the addresses 
- used are diabolical and are designed to show unusual features of your 
+ Exercises simple memory writes and reads.  Watch out, the addresses
+ used are diabolical and are designed to show unusual features of your
  memory management system.
 
- Use:  
+ Use:
  Z502_REG1                data_written
  Z502_REG2                data_read
  Z502_REG3                address
@@ -1329,7 +1329,7 @@ void test2b(void) {
 			printf("AN ERROR HAS OCCURRED.\n");
 		Z502_REG5++;
 	}
-}                            // End of test2b    
+}                            // End of test2b
 
 /**************************************************************************
 
@@ -1430,7 +1430,7 @@ void test2c(void) {
 	printf("Test2c, PID %ld, Ends at Time %ld\n", Z502_REG4, Z502_REG8);
 	TERMINATE_PROCESS(-1, &Z502_REG9);
 
-}                                       // End of test2c    
+}                                       // End of test2c
 
 /**************************************************************************
 
@@ -1469,12 +1469,12 @@ void test2d(void) {
 
 	TERMINATE_PROCESS(-2, &Z502_REG5);
 
-}                                   // End of test2d 
+}                                   // End of test2d
 
 /**************************************************************************
 
- Test2e causes extensive page replacement.  It simply advances through 
- virtual memory.  It will eventually end because using an illegal virtual 
+ Test2e causes extensive page replacement.  It simply advances through
+ virtual memory.  It will eventually end because using an illegal virtual
  address will cause this process to be terminated by the operating system.
 
  Z502_REG1  - data that was written.
@@ -1497,7 +1497,7 @@ void test2e(void) {
 	for (Iterations = 0; Iterations < VIRTUAL_MEM_PGS; Iterations +=
 	STEP_SIZE) {
 		Z502_REG3 = PGSIZE * Iterations; // Generate address
-		Z502_REG1 = Z502_REG3 + Z502_REG4; // Generate data 
+		Z502_REG1 = Z502_REG3 + Z502_REG4; // Generate data
 		MEM_WRITE(Z502_REG3, &Z502_REG1); // Write the data
 
 		MEM_READ(Z502_REG3, &Z502_REG2); // Read back data
@@ -1529,7 +1529,7 @@ void test2e(void) {
 			printf("AN ERROR HAS OCCURRED.\n");
 
 	}    // End of for loop
-}                                  // End of test2e    
+}                                  // End of test2e
 
 /**************************************************************************
 
@@ -1684,7 +1684,7 @@ void test2h(void) {
 	CREATE_PROCESS("fourth", test2hx, 8, &trash, &Z502_REG5);
 	CREATE_PROCESS("fifth", test2hx, 9, &trash, &Z502_REG5);
 
-	// Loop here until the "2hx" final process terminate. 
+	// Loop here until the "2hx" final process terminate.
 
 	Z502_REG9 = ERR_SUCCESS;
 	while (Z502_REG9 == ERR_SUCCESS) {
@@ -1750,7 +1750,7 @@ void test2h(void) {
 #define           SHARED_MEM_NAME             "almost_done!!\0"
 
 // The following structure will be laid on shared memory by using
-// the MEM_ADJUST   macro                                          
+// the MEM_ADJUST   macro
 
 typedef struct {
 	INT32 structure_tag;
@@ -1824,7 +1824,7 @@ void test2hx(void) {
 			&ld->number_previous_sharers, &ld->error_returned);
 	SuccessExpected(ld->error_returned, "DEFINE_SHARED_AREA");
 
-	//  Put stuff in shared area - lock it first        
+	//  Put stuff in shared area - lock it first
 
 	// Increment the number of users of shared area
 	// We know the shared area was initially zeroed.  So we can read
@@ -1837,15 +1837,15 @@ void test2hx(void) {
 	ld->memory_info++;
 	MEM_WRITE(MEM_ADJUST( number_2hx_procs ), &ld->memory_info);
 
-	ld->memory_info = PROC_INFO_STRUCT_TAG; // Sanity data 
+	ld->memory_info = PROC_INFO_STRUCT_TAG; // Sanity data
 	ld->our_index = ld->number_previous_sharers;
 	MEM_WRITE(MEM_ADJUST(proc_info[ld->our_index].structure_tag),
 			&ld->memory_info);
 
-	ld->memory_info = Z502_REG4; // Store PID in our slot 
+	ld->memory_info = Z502_REG4; // Store PID in our slot
 	MEM_WRITE(MEM_ADJUST(proc_info[ld->our_index].pid), &ld->memory_info);
 
-	ld->memory_info = 0; // Free lock 
+	ld->memory_info = 0; // Free lock
 	MEM_WRITE(MEM_ADJUST( lock_word ), &ld->memory_info);
 
 	// Loop here the required number of times
@@ -1928,9 +1928,9 @@ void test2hx(void) {
 
 	}  //End of while
 
-	// The code comes here when it's finished with all the messages. 
+	// The code comes here when it's finished with all the messages.
 
-	// The Master prints out the entire shared area    
+	// The Master prints out the entire shared area
 
 	if (ld->our_index == 0) {
 		SLEEP(5000); // Wait for msgs to finish
@@ -1954,7 +1954,7 @@ void test2hx(void) {
 	}              // END of if
 	TERMINATE_PROCESS(-2, &Z502_REG9);
 
-}                                // End of test2hx   
+}                                // End of test2hx
 
 /**************************************************************************
 
@@ -1978,7 +1978,7 @@ void get_skewed_random_number(long *random_number, long range) {
 	temp = (double) ((long) temp % extended_range);
 	temp = pow(temp, (double) SKEWING_FACTOR);
 	*random_number = (long) temp;
-} // End get_skewed_random_number 
+} // End get_skewed_random_number
 
 /*****************************************************************
  testStartCode()

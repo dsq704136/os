@@ -18,23 +18,44 @@ void InitQueue( PQueue **q ){
     *q = tmp_q;
 }
 
-void AddtoQueue( PQueue *q, PCB *pcb ){
+void AddtoQueue( PQueue *q, PCB *pcb, char* orderBy ){
 
     //TODO Thread Safe
-    PCB *head = q->head;
-    PCB *p_next;
+    PCB *p = q->head;
+    PCB *pre = NULL;
 
-    if( head == NULL ){
-        head = pcb;
+    if( q->head == NULL ){
+        q->head = pcb;
     }
     else{
-        p_next = head->next_pcb;
-        // Order by time_of_delay
-        while( p_next != NULL && p_next->time_of_delay > pcb->time_of_delay )
-            p_next = p_next->next_pcb;
 
-        pcb->next_pcb = p_next;
-        p_next = pcb;
+        // Order by time_of_delay
+        if( orderBy == 'time_of_delay' )
+            while( p && p->time_of_delay < pcb->time_of_delay ){
+                pre = p;
+                p = p->next_pcb;
+            }
+
+        else if( orderBy == 'priority' )
+            while( p && p->priority < pcb->priority ){
+                pre = p;
+                p = p->next_pcb;
+            }
+
+        else
+            while( p ){
+                pre = p;
+                p = p->next_pcb;
+            }
+
+        if( pre == NULL ){
+            q->head = pcb;
+            pcb->next_pcb = p;
+        }
+        else{
+            pre->next_pcb = pcb;
+            pcb->next_pcb = p;
+        }
     }
 
     q->length++;

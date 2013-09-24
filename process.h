@@ -10,7 +10,7 @@ typedef struct
     char                *name;
     struct PCB          *next_pcb;
     INT32               time_of_delay;
-    INT16               running_status;
+    INT16               state;
     INT16               pmode;
     INT16               priority;
     void                *context;

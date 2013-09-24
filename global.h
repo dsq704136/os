@@ -159,6 +159,10 @@ typedef         int                             BOOL;
 #define         DEVICE_FREE                             7L
 #define         ERR_Z502_INTERNAL_BUG                   20L
 #define         ERR_OS502_GENERATED_BUG                 21L
+#define         ERR_ILLEAGLE_PRIORITY                   30L
+#define         ERR_DUPLICATE_PNAME                     31L
+#define         ERR_OVER_CAPACITY                       32L
+#define         ERR_PID_NOT_FOUND                       32L
 
         /* Miscellaneous                                        */
 
@@ -170,12 +174,13 @@ typedef         int                             BOOL;
 #define         USER_MODE                               (short)0
 #define         KERNEL_MODE                             (short)1
 
-/* Define the return of create_process */
+/* Define the process state */
 
-#define         LEGAL_INPUT                             0L
-#define         ILLEAGLE_PRIORITY_ERR                   1L
-#define         DUPLICATE_NAME_ERR                      2L
-#define         OVER_CAPACITY_ERR                       3L
+#define         RUNNING                                 0
+#define         WAITING                                 1
+#define         BLOCKED                                 2
+
+
 
 
 #endif /* GLOBAL_H_ */

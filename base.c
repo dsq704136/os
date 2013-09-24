@@ -43,7 +43,7 @@ char                 *call_names[] = { "mem_read ", "mem_write",
                             "send     ", "receive  ", "disk_read",
                             "disk_wrt ", "def_sh_ar" };
 
-PQueue                *timer_queue;
+
 
 /************************************************************************
     INTERRUPT_HANDLER
@@ -101,28 +101,35 @@ void    fault_handler( void )
 int check_input( char *name, INT32 proprity ){
 
     if( proprity < 0 )
-        return ILLEAGLE_PRIORITY_ERR;
+        return ERR_ILLEAGLE_PRIORITY;
 
     if( GetLength( PList ) >= 20 )
-        return OVER_CAPACITY_ERR;
+        return ERR_OVER_CAPACITY;
 
     if( SearchByPname( PList, name ) )
-        return DUPLICATE_NAME_ERR;
+        return ERR_DUPLICATE_PNAME;
 
-    return LEGAL_INPUT;
+    return ERR_SUCCESS;
 }
-
 /************************************************************************
-    create_process
+    DispatchProcess
 ************************************************************************/
 
-int create_process( INT32 addr, char *name, INT32 prop ){
-    int r;
-    if( r = check_input( name, prop ) ){
-        OSCreateProcess( addr, name, prop, USER_MODE );
+void DispatchProcess(){
+
+    PCB *p;
+    while( 1 ){
+        p= ready_queue->head;
+
+        if( p == NULL ){
+            printf( "No Process." );
+        }
+        else{
+            SwitchProcess( p );
+        }
     }
-    return r;
 }
+
 
 /************************************************************************
     start_timer
@@ -137,13 +144,14 @@ void start_timer( INT32 delay ){
     GET_TIME_OF_DAY(&time);
     running_process->time_of_delay = time + delay;
 
-    AddtoQueue( timer_queue, running_process );
+    AddtoQueue( timer_queue, running_process, "time_of_delay" );
 
-    Z502MemoryRead(Z502TimerStatus, &timer_status);
+    //TODO CHECK STATUS FIRST
+    /*Z502MemoryRead(Z502TimerStatus, &timer_status);
     if (timer_status != DEVICE_FREE){
         printf("Got erroneous result for Status of Timer\n");
         return;
-    }
+    }*/
 
     Z502MemoryWrite(Z502TimerStart, &delay);
     Z502MemoryRead(Z502TimerStatus, &timer_status);
@@ -173,10 +181,11 @@ void    svc( SYSTEM_CALL_DATA *SystemCallData ) {
     static short        do_print = 10;
     short               i;
     long                Time;
-    void                *pcb_addr;
-    INT32               pcb_prop;
-    char                *pcb_name;
-
+    void                *addr;
+    char                *name;
+    int                 prop;
+    int                 r;
+    LinkList            n;
 
     call_type = (short)SystemCallData->SystemCallNumber;
     if ( do_print > 0 ) {
@@ -205,10 +214,26 @@ void    svc( SYSTEM_CALL_DATA *SystemCallData ) {
             break;
 
         case SYSNUM_CREATE_PROCESS:
-            pcb_addr = SystemCallData->Argument[1];
-            pcb_name = SystemCallData->Argument[0];
-            pcb_prop = SystemCallData->Argument[2];
-            int r = create_process( pcb_addr, pcb_name, pcb_prop );
+            name = SystemCallData->Argument[0];
+            addr = SystemCallData->Argument[1];
+            prop = SystemCallData->Argument[2];
+
+            if( ( r = check_input( name, prop ) ) == ERR_SUCCESS )
+                SystemCallData->Argument[3] = OSCreateProcess( addr, name, prop, USER_MODE );
+
+            *(long *)SystemCallData->Argument[4] = r;
+            break;
+
+        case SYSNUM_GET_PROCESS_ID:
+            name = SystemCallData->Argument[0];
+
+            if( n = SearchByPname( PList, name ) ){
+                SystemCallData->Argument[1] = n->data;
+                SystemCallData->Argument[2] = ERR_SUCCESS;
+            }
+            else{
+                SystemCallData->Argument[2] = ERR_PID_NOT_FOUND;
+            }
             break;
 
         default:
@@ -216,8 +241,6 @@ void    svc( SYSTEM_CALL_DATA *SystemCallData ) {
             printf( "Call_type is - %i\n", call_type);
     }                                           // End of switch
 }                                               // End of svc
-
-
 
 
 /************************************************************************
@@ -231,7 +254,9 @@ void    osInit( int argc, char *argv[]  ) {
     INT32               i;
     /* Demonstrates how calling arguments are passed thru to here       */
     InitQueue( &timer_queue );
+    InitQueue( &ready_queue );
     PList = CreateNullList();
+    running_process = NULL;
 
     printf( "Program called with %d arguments:", argc );
     for ( i = 0; i < argc; i++ )
@@ -248,14 +273,14 @@ void    osInit( int argc, char *argv[]  ) {
     /*  Determine if the switch was set, and if so go to demo routine.  */
 
     if (( argc > 1 ) && ( strcmp( argv[1], "sample" ) == 0 ) )
-        OSCreateProcess( (void *)sample_code, "sample", 0, KERNEL_MODE );
+        OSCreateProcess( (void *)sample_code, "", 0, KERNEL_MODE );
                        /* This routine should never return!!           */
 
     /*  This should be done by a "os_make_process" routine, so that
         test0 runs on a process recognized by the operating system.    */
 
-    OSCreateProcess( (void *)test1a, "test1a", 0, USER_MODE );
-
+    OSCreateProcess( (void *)test1b, "", 0, USER_MODE );
+    DispatchProcess();
     //Z502MakeContext( &next_context, (void *)test1a, USER_MODE );
     //Z502SwitchContext( SWITCH_CONTEXT_KILL_MODE, &next_context );
 }                                               // End of osInit
