@@ -1,0 +1,113 @@
+# depslib dependency file v1.0
+1379957544 source:d:\os\os\base.c
+	"global.h"
+	"syscalls.h"
+	"protos.h"
+	"string.h"
+	"process.h"
+	"queues.h"
+
+1379983893 d:\os\os\global.h
+
+1378008822 d:\os\os\syscalls.h
+	"stdio.h"
+
+1377985635 d:\os\os\protos.h
+	"syscalls.h"
+
+1377968140 source:d:\os\os\state_printer.c
+	"global.h"
+	"syscalls.h"
+	"z502.h"
+	"protos.h"
+	"stdio.h"
+	"string.h"
+	<unistd.h>
+
+1377968144 d:\os\os\z502.h
+
+1377985594 source:d:\os\os\test.c
+	"global.h"
+	"protos.h"
+	"syscalls.h"
+	"stdio.h"
+	"string.h"
+	"stdlib.h"
+	"math.h"
+
+1377985590 source:d:\os\os\z502.c
+	"global.h"
+	"syscalls.h"
+	"z502.h"
+	"protos.h"
+	<stdio.h>
+	<stdlib.h>
+	<memory.h>
+	<windows.h>
+	<winbase.h>
+	<sys/types.h>
+	<pthread.h>
+	<unistd.h>
+	<asm/errno.h>
+	<sys/time.h>
+	<sys/resource.h>
+	<pthread.h>
+	<unistd.h>
+	<errno.h>
+	<sys/time.h>
+	<sys/resource.h>
+
+1378007342 source:d:\os\os\sample.c
+	"global.h"
+	"syscalls.h"
+	"z502.h"
+	"protos.h"
+	"stdio.h"
+	"stdlib.h"
+	"string.h"
+	<windows.h>
+	<winbase.h>
+	<sys/types.h>
+
+1379984611 d:\os\os\process.h
+	"z502.h"
+
+1379984676 source:d:\os\os\process.c
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	"global.h"
+	"syscalls.h"
+	"process.h"
+	"protos.h"
+	"linklist.h"
+
+1379951569 source:d:\os\os\queues.c
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	"global.h"
+	"z502.h"
+	"syscalls.h"
+	"process.h"
+	"protos.h"
+	"queues.h"
+
+1379875436 d:\os\os\queues.h
+	"process.h"
+
+1379983584 source:d:\os\os\linklist.c
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	"global.h"
+	"syscalls.h"
+	"process.h"
+	"protos.h"
+	"queues.h"
+	"linklist.h"
+
+1379984610 d:\os\os\linklist.h
+	"process.h"
+
