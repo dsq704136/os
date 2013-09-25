@@ -18,7 +18,7 @@ void InitQueue( PQueue **q ){
     *q = tmp_q;
 }
 
-void AddtoQueue( PQueue *q, PCB *pcb, char* orderBy ){
+void AddtoQueue( PQueue *q, PCB *pcb, int orderBy ){
 
     //TODO Thread Safe
     PCB *p = q->head;
@@ -30,13 +30,13 @@ void AddtoQueue( PQueue *q, PCB *pcb, char* orderBy ){
     else{
 
         // Order by time_of_delay
-        if( orderBy == 'time_of_delay' )
+        if( orderBy == ORDER_TIME_OF_DELAY )
             while( p && p->time_of_delay < pcb->time_of_delay ){
                 pre = p;
                 p = p->next_pcb;
             }
 
-        else if( orderBy == 'priority' )
+        else if( orderBy == ORDER_PRIORITY )
             while( p && p->priority < pcb->priority ){
                 pre = p;
                 p = p->next_pcb;
@@ -57,8 +57,8 @@ void AddtoQueue( PQueue *q, PCB *pcb, char* orderBy ){
             pcb->next_pcb = p;
         }
     }
-
     q->length++;
+    printf( "process '%s' already ADD into queue, queue length: %ld\n", pcb->name, q->length );
 }
 
 int RemoveFromQueue( PQueue *q, PCB *pcb ){
@@ -86,6 +86,7 @@ int RemoveFromQueue( PQueue *q, PCB *pcb ){
                 p->next_pcb = NULL;
             }
             q->length--;
+            printf( "process '%s' already REMOVE from queue, queue length: %ld\n", pcb->name, q->length );
             return 1;
         }
         pre = p;

@@ -14,7 +14,7 @@ LinkList CreateNullList( void ){
     LinkList L = (LinkList)malloc(sizeof(LNode));
     if( L == NULL ){
         printf( "Out of memory!" );
-        return;
+        return(NULL);
     }
 
     L->next = NULL;
@@ -37,7 +37,7 @@ int InsertIntoList( LinkList L, PCB *p ){
 
 }
 
-LinkList SearchByPid( LinkList L, INT32 pid ){
+LinkList SearchByPid( LinkList L, int pid ){
 
     LinkList n = L->next;
     PCB *p;
@@ -63,7 +63,7 @@ LinkList SearchByPname( LinkList L, char *pname ){
 
         p = n->data;
 
-        if( p->name == pname ){
+        if( strcmp( p->name, pname ) == 0 ){
             return n;
         }
         n = n->next;
@@ -71,7 +71,7 @@ LinkList SearchByPname( LinkList L, char *pname ){
     return NULL;
 }
 
-BOOL DeleteByPid( LinkList L, INT32 pid ){
+BOOL DeleteByPid( LinkList L, int pid ){
 
     LinkList n, pre;
     n = L;

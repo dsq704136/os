@@ -162,7 +162,8 @@ typedef         int                             BOOL;
 #define         ERR_ILLEAGLE_PRIORITY                   30L
 #define         ERR_DUPLICATE_PNAME                     31L
 #define         ERR_OVER_CAPACITY                       32L
-#define         ERR_PID_NOT_FOUND                       32L
+#define         ERR_PID_NOT_FOUND                       33L
+#define         ERR_NO_SUCH_PROCESS                     34L
 
         /* Miscellaneous                                        */
 
@@ -181,6 +182,10 @@ typedef         int                             BOOL;
 #define         BLOCKED                                 2
 
 
+/* Define the order type */
+#define         ORDER_TIME_OF_DELAY                                    0
+#define         ORDER_PRIORITY                                1
+#define         ORDER_OTHER                                   2
 
 
 #endif /* GLOBAL_H_ */

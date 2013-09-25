@@ -103,7 +103,7 @@ int check_input( char *name, INT32 proprity ){
     if( proprity < 0 )
         return ERR_ILLEAGLE_PRIORITY;
 
-    if( GetLength( PList ) >= 20 )
+    if( GetLength( PList ) > 20 )
         return ERR_OVER_CAPACITY;
 
     if( SearchByPname( PList, name ) )
@@ -119,7 +119,7 @@ void DispatchProcess(){
 
     PCB *p;
     while( 1 ){
-        p= ready_queue->head;
+        p = ready_queue->head;
 
         if( p == NULL ){
             printf( "No Process." );
@@ -144,7 +144,7 @@ void start_timer( INT32 delay ){
     GET_TIME_OF_DAY(&time);
     running_process->time_of_delay = time + delay;
 
-    AddtoQueue( timer_queue, running_process, "time_of_delay" );
+    AddtoQueue( timer_queue, running_process, ORDER_TIME_OF_DELAY );
 
     //TODO CHECK STATUS FIRST
     /*Z502MemoryRead(Z502TimerStatus, &timer_status);
@@ -177,62 +177,78 @@ void start_timer( INT32 delay ){
 ************************************************************************/
 
 void    svc( SYSTEM_CALL_DATA *SystemCallData ) {
-    short               call_type;
+    short               call_type, i;
     static short        do_print = 10;
-    short               i;
-    long                Time;
     void                *addr;
     char                *name;
-    int                 prop;
-    int                 r;
+    int                 Time, prop, r, pid;
     LinkList            n;
+    PCB                 *p;
 
     call_type = (short)SystemCallData->SystemCallNumber;
     if ( do_print > 0 ) {
         printf( "SVC handler: %s\n", call_names[call_type]);
-        for (i = 0; i < SystemCallData->NumberOfArguments - 1; i++ ){
+        /*for (i = 0; i < SystemCallData->NumberOfArguments - 1; i++ ){
         	 //Value = (long)*SystemCallData->Argument[i];
              printf( "Arg %d: Contents = (Decimal) %8ld,  (Hex) %8lX\n", i,
              (unsigned long )SystemCallData->Argument[i],
              (unsigned long )SystemCallData->Argument[i]);
-        }
+        }*/
         do_print--;
     }
     switch (call_type) {
         // Get time service call
         case SYSNUM_GET_TIME_OF_DAY:   // This value is found in syscalls.h
             Z502MemoryRead( Z502ClockStatus, &Time );
-            *(long *)SystemCallData->Argument[0] = Time;
+            *(int *)SystemCallData->Argument[0] = Time;
             break;
         // terminate system call
         case SYSNUM_TERMINATE_PROCESS:
-            Z502Halt();
+
+            pid = (int)SystemCallData->Argument[0];
+            if( pid < 0 )
+                Z502Halt();
+
+            n = SearchByPid( PList, pid );
+            if( n == NULL ){
+                *(long *)SystemCallData->Argument[1] = ERR_NO_SUCH_PROCESS;
+                break;
+            }
+            p = n->data;
+            if( p->state == RUNNING ){
+                DestoryProcess( p );
+            }
+
+            DestoryProcess( p );
+            *(long *)SystemCallData->Argument[1] = ERR_SUCCESS;
             break;
 
         case SYSNUM_SLEEP:
-            start_timer( SystemCallData->Argument[0] );
+            start_timer( (int)SystemCallData->Argument[0] );
             break;
 
         case SYSNUM_CREATE_PROCESS:
-            name = SystemCallData->Argument[0];
+            name = (char *)SystemCallData->Argument[0];
             addr = SystemCallData->Argument[1];
-            prop = SystemCallData->Argument[2];
+            prop = (int)SystemCallData->Argument[2];
 
-            if( ( r = check_input( name, prop ) ) == ERR_SUCCESS )
-                SystemCallData->Argument[3] = OSCreateProcess( addr, name, prop, USER_MODE );
+            if( ( r = check_input( name, prop ) ) == ERR_SUCCESS ){
+                p = OSCreateProcess( addr, name, prop, USER_MODE );
+                *(int *)SystemCallData->Argument[3] = p->pid;
+            }
 
             *(long *)SystemCallData->Argument[4] = r;
             break;
 
         case SYSNUM_GET_PROCESS_ID:
-            name = SystemCallData->Argument[0];
+            name = (char *)SystemCallData->Argument[0];
 
-            if( n = SearchByPname( PList, name ) ){
+            if( ( n = SearchByPname( PList, name ) ) != NULL ){
                 SystemCallData->Argument[1] = n->data;
-                SystemCallData->Argument[2] = ERR_SUCCESS;
+                *(long *)SystemCallData->Argument[2] = ERR_SUCCESS;
             }
             else{
-                SystemCallData->Argument[2] = ERR_PID_NOT_FOUND;
+                *(long *)SystemCallData->Argument[2] = ERR_PID_NOT_FOUND;
             }
             break;
 
@@ -257,6 +273,7 @@ void    osInit( int argc, char *argv[]  ) {
     InitQueue( &ready_queue );
     PList = CreateNullList();
     running_process = NULL;
+    global_pid = 0;
 
     printf( "Program called with %d arguments:", argc );
     for ( i = 0; i < argc; i++ )

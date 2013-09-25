@@ -15,9 +15,9 @@ LinkList              PList;
 
 LinkList CreateNullList( void );
 int InsertIntoList( LinkList, PCB* );
-LinkList SearchByPid( LinkList, INT32 );
+LinkList SearchByPid( LinkList, int );
 LinkList SearchByPname( LinkList, char* );
-BOOL DeleteByPid( LinkList, INT32 );
+BOOL DeleteByPid( LinkList, int );
 BOOL DeleteByPname( LinkList, char* );
 int GetLength( LinkList );
 
