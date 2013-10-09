@@ -112,6 +112,12 @@ typedef         int                             BOOL;
 #define      MEMORY_INTERLOCK_BASE     0x7FE00000
 #define      MEMORY_INTERLOCK_SIZE     0x00000100
 
+/* Defination of Queue Locks */
+
+#define      MEMORY_READYQ_LOCK     0x7FE00020
+#define      MEMORY_TIMERQ_LOCK     0x7FE00030
+#define      MEMORY_PRINTER_LOCK     0x7FE00030
+
 /*  These are the device IDs that are produced when an interrupt
     or fault occurs.                                            */
         /* Definition of trap types.                            */
@@ -164,6 +170,11 @@ typedef         int                             BOOL;
 #define         ERR_OVER_CAPACITY                       32L
 #define         ERR_PID_NOT_FOUND                       33L
 #define         ERR_NO_SUCH_PROCESS                     34L
+#define         ERR_SUSPEND_RUNNNING                    35L
+#define         ERR_NOT_SUSPEND                         36L
+#define         ERR_ALREADY_SUSPEND                         36L
+
+
 
         /* Miscellaneous                                        */
 
@@ -179,13 +190,19 @@ typedef         int                             BOOL;
 
 #define         RUNNING                                 0
 #define         WAITING                                 1
-#define         BLOCKED                                 2
+#define         READY                                   2
+#define         SUSPEND                                 3
 
 
 /* Define the order type */
-#define         ORDER_TIME_OF_DELAY                                    0
+#define         ORDER_TIME_OF_DELAY                           0
 #define         ORDER_PRIORITY                                1
 #define         ORDER_OTHER                                   2
 
+/* Dedine locks */
+#define                  DO_LOCK                     1
+#define                  DO_UNLOCK                   0
+#define                  SUSPEND_UNTIL_LOCKED        TRUE
+#define                  DO_NOT_SUSPEND              FALSE
 
 #endif /* GLOBAL_H_ */

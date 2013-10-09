@@ -10,34 +10,65 @@
 
 
 
-void InitQueue( PQueue **q ){
+void InitQueue( PQueue **q, char *name ){
+
     PQueue *tmp_q;
     tmp_q = (PQueue *) calloc(1, sizeof(PQueue));
+
+    memset( tmp_q->name, '\0', 32 );
+    strcpy( tmp_q->name, name );
+
     tmp_q->length = 0;
     tmp_q->head = NULL;
     *q = tmp_q;
 }
 
+
+BOOL HasPCB( PQueue *q, PCB *pcb ){
+
+    PCB *p = q->head;
+
+    while( p != NULL ){
+        if( p->pid == pcb->pid )
+            return 1;
+        p = p->next_pcb;
+    }
+    return 0;
+}
+
+BOOL IsEmptyQueue( PQueue *q ){
+
+    if( q->head == NULL )
+        return 1;
+
+    return 0;
+}
+
+void GetFirstPCB( PCB **pcb, PQueue *q ){
+    *pcb = q->head;
+}
+
 void AddtoQueue( PQueue *q, PCB *pcb, int orderBy ){
 
-    //TODO Thread Safe
+    if( HasPCB( q, pcb ) == 1 )
+        return;
+
     PCB *p = q->head;
     PCB *pre = NULL;
 
-    if( q->head == NULL ){
+    if( q->head == NULL )
         q->head = pcb;
-    }
-    else{
 
+    else{
         // Order by time_of_delay
         if( orderBy == ORDER_TIME_OF_DELAY )
-            while( p && p->time_of_delay < pcb->time_of_delay ){
+            while( p && p->time_of_delay <= pcb->time_of_delay ){
                 pre = p;
                 p = p->next_pcb;
             }
 
         else if( orderBy == ORDER_PRIORITY )
-            while( p && p->priority < pcb->priority ){
+            while( p && p->priority <= pcb->priority ){
                 pre = p;
                 p = p->next_pcb;
             }
@@ -57,8 +88,26 @@ void AddtoQueue( PQueue *q, PCB *pcb, int orderBy ){
             pcb->next_pcb = p;
         }
     }
+
+    if( strcmp( q->name, "Ready" ) == 0 )
+        pcb->state = READY;
+    else if( strcmp( q->name, "Timer" ) == 0 )
+        pcb->state = WAITING;
+
     q->length++;
-    printf( "process '%s' already ADD into queue, queue length: %ld\n", pcb->name, q->length );
+    //printf( "ADD '%s' into %s queue(Length: %ld)\n", pcb->name, q->name, q->length );
+}
+
+void PrintQueue( PQueue *q ){
+
+    PCB *p = q->head;
+
+    while( p != NULL ){
+        printf( "%s(%d), ",p->name, p->pid );
+        p = p->next_pcb;
+    }
+    printf( "\n" );
+
 }
 
 int RemoveFromQueue( PQueue *q, PCB *pcb ){
@@ -66,7 +115,7 @@ int RemoveFromQueue( PQueue *q, PCB *pcb ){
     PCB *p = q->head;
     PCB *pre = NULL;
 
-    if( p == NULL ){
+    if( IsEmptyQueue( q ) ){
         printf( "Error: Empty Queue." );
         return -1;
     }
@@ -86,7 +135,7 @@ int RemoveFromQueue( PQueue *q, PCB *pcb ){
                 p->next_pcb = NULL;
             }
             q->length--;
-            printf( "process '%s' already REMOVE from queue, queue length: %ld\n", pcb->name, q->length );
+            //printf( "REMOVE '%s' from %s queue(Length: %ld)\n", pcb->name, q->name, q->length );
             return 1;
         }
         pre = p;

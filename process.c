@@ -11,7 +11,7 @@
 
 
 
-PCB *OSCreateProcess( void *starting_address, char *name,
+void OSCreateProcess( PCB **p, void *starting_address, char *name,
                       int priority, BOOL user_or_kernel){
 
     PCB *new_process = (PCB *) calloc(1, sizeof(PCB));
@@ -20,38 +20,35 @@ PCB *OSCreateProcess( void *starting_address, char *name,
     memset( new_process->name, '\0', 64 );
     strcpy( new_process->name, name );
 
-    new_process->pid = 10000 + ( ++global_pid );
+    new_process->pid = ++global_pid;
     new_process->next_pcb = NULL;
     new_process->time_of_delay = 0;
     new_process->pmode = user_or_kernel;
     new_process->priority = priority;
-    new_process->state = WAITING;
 
-    Z502MakeContext( &new_process->context, starting_address, user_or_kernel );
-    InsertIntoList( PList, new_process );
-    AddtoQueue( ready_queue, new_process, ORDER_PRIORITY );
-    return new_process;
-    //DispatchProcess();
-    //running_process = new_process;
-    //Z502SwitchContext( SWITCH_CONTEXT_KILL_MODE, &new_process->context );
-
+    CALL( Z502MakeContext( &new_process->context, starting_address, user_or_kernel ) );
+    CALL( InsertIntoList( PList, new_process ) );
+    CALL( AddtoQueue( ready_queue, new_process, ORDER_PRIORITY ) );
+    *p = new_process;
 }
 
-void SwitchProcess( PCB *p ){
-    if( running_process ){
-        AddtoQueue( ready_queue, running_process, ORDER_OTHER );
-        running_process->state = WAITING;
-    }
-    RemoveFromQueue( ready_queue, p );
-    p->state = RUNNING;
-    running_process = p;
-    Z502SwitchContext( SWITCH_CONTEXT_SAVE_MODE, &p->context );
-}
 
 void DestoryProcess( PCB *p ){
 
-    if( RemoveFromQueue( ready_queue, p ) != 1 )
-        RemoveFromQueue( timer_queue, p );
+    int LockResult;
+
+    READ_MODIFY( MEMORY_READYQ_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
+                 &LockResult);
+    if( RemoveFromQueue( ready_queue, p ) != 1 ){
+        printf( "ERROR" );
+        READ_MODIFY( MEMORY_READYQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
+                     &LockResult);
+        return;
+    }
+        //RemoveFromQueue( timer_queue, p );
+
+    READ_MODIFY( MEMORY_READYQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
+                 &LockResult);
 
     Z502DestroyContext( &p->context );
     DeleteByPid( PList, p->pid );

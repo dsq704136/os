@@ -4,23 +4,22 @@
 #include                 "z502.h"
 
 
-typedef struct
-    {
+struct PCB{
     int                 pid;
-    char                name[64];
-    struct PCB          *next_pcb;
     int                 time_of_delay;
+    char                name[64];
     INT16               state;
     INT16               pmode;
     INT16               priority;
     void                *context;
-} PCB;
+    struct PCB          *next_pcb;
+};
+typedef struct PCB PCB;
 
 int                   global_pid;
 PCB                   *running_process;
 
-PCB *OSCreateProcess( void *, char *, int, BOOL );
-void SwitchProcess( PCB* );
+void OSCreateProcess( PCB **, void *, char *, int, BOOL );
 void DestoryProcess( PCB* );
 
 #endif // PROCESS_H_INCLUDED

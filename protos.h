@@ -22,9 +22,11 @@ protos.h
 
 void   interrupt_handler( void );
 void   fault_handler( void );
+void   print_schedule( char *, int );
 void   svc( SYSTEM_CALL_DATA * );
 void   osInit (int argc, char *argv[] );
-
+void   ResetTimer( void );
+void   ReadytoGo( void );
 //                     ENTRIES in sample.c
 
 void   sample_code(void );
