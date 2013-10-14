@@ -30,18 +30,18 @@ BOOL HasPCB( PQueue *q, PCB *pcb ){
 
     while( p != NULL ){
         if( p->pid == pcb->pid )
-            return 1;
+            return TRUE;
         p = p->next_pcb;
     }
-    return 0;
+    return FALSE;
 }
 
 BOOL IsEmptyQueue( PQueue *q ){
 
     if( q->head == NULL )
-        return 1;
+        return TRUE;
 
-    return 0;
+    return FALSE;
 }
 
 void GetFirstPCB( PCB **pcb, PQueue *q ){
@@ -93,6 +93,8 @@ void AddtoQueue( PQueue *q, PCB *pcb, int orderBy ){
         pcb->state = READY;
     else if( strcmp( q->name, "Timer" ) == 0 )
         pcb->state = WAITING;
+    else if( strcmp( q->name, "Suspend" ) == 0 )
+        pcb->state = SUSPEND;
 
     q->length++;
     //printf( "ADD '%s' into %s queue(Length: %ld)\n", pcb->name, q->name, q->length );

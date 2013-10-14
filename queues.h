@@ -11,13 +11,15 @@ typedef struct{
 
 PQueue                *timer_queue;
 PQueue                *ready_queue;
+PQueue                *suspend_queue;
 
 void InitQueue( PQueue **, char * );
 void AddtoQueue( PQueue *, PCB *, int );
 BOOL IsEmptyQueue( PQueue * );
+BOOL HasPCB( PQueue*, PCB* );
 void GetFirstPCB( PCB **, PQueue * );
 void PrintQueue( PQueue * );
-int RemoveFromQueue( PQueue *, PCB * );
+int  RemoveFromQueue( PQueue *, PCB * );
 
 
 #endif // QUEUES_H_INCLUDED

@@ -6,6 +6,7 @@
 #include                 "process.h"
 #include                 "protos.h"
 #include                 "queues.h"
+#include                 "message.h"
 
 #include "linklist.h"
 
@@ -22,20 +23,37 @@ LinkList CreateNullList( void ){
 }
 
 
-int InsertIntoList( LinkList L, PCB *p ){
+int InsertIntoList( LinkList L, void *data ){
 
     LinkList new_node = (LinkList)calloc(1, sizeof(LNode));
     if( new_node == NULL ){
         printf( "Out of memory!" );
         return 0;
     }
-    new_node->data = p;
+    new_node->data = data;
     new_node->next = L->next;
     L->next = new_node;
     return 1;
-
-
 }
+
+
+Message *SearchMsg( int sender, int receiver ){
+
+    LinkList n = MsgList->next;
+    Message *m;
+
+    while( n ){
+        m = n->data;
+        if( ( sender == 0 || sender == m->sender_pid )
+            && ( receiver == 0 || receiver == m->receiver_pid || m->receiver_pid == -1 ) )
+            return m;
+
+        n = n->next;
+    }
+    return NULL;
+}
+
+
 
 LinkList SearchByPid( LinkList L, int pid ){
 
@@ -69,6 +87,26 @@ LinkList SearchByPname( LinkList L, char *pname ){
     }
     return NULL;
 }
+
+
+BOOL DeleteMsg( int msg_id ){
+
+    LinkList pre, n = MsgList;
+    Message *m;
+
+    while( n ){
+        pre = n;
+        n = n->next;
+        m = n->data;
+        if( m->id == msg_id ){
+            pre->next = n->next;
+            free( n );
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 
 BOOL DeleteByPid( LinkList L, int pid ){
 

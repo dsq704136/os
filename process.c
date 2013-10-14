@@ -17,7 +17,7 @@ void OSCreateProcess( PCB **p, void *starting_address, char *name,
     PCB *new_process = (PCB *) calloc(1, sizeof(PCB));
 
     //int len_name = strlen( name );
-    memset( new_process->name, '\0', 64 );
+    memset( new_process->name, 0x00, 64 );
     strcpy( new_process->name, name );
 
     new_process->pid = ++global_pid;

@@ -39,6 +39,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="linklist.h" />
+		<Unit filename="message.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="message.h" />
 		<Unit filename="process.c">
 			<Option compilerVar="CC" />
 		</Unit>

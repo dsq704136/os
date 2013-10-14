@@ -31,6 +31,7 @@
 #include             "process.h"
 #include             "queues.h"
 #include             "linklist.h"
+#include             "message.h"
 
 // These loacations are global and define information about the page table
 extern UINT16        *Z502_PAGE_TBL_ADDR;
@@ -143,6 +144,7 @@ void    fault_handler( void )
     MEM_WRITE(Z502InterruptClear, &Index );
 }                                       /* End of fault_handler */
 
+
 int check_input( char *name, int priority ){
 
     if( priority < 0 || priority > 99 )
@@ -157,57 +159,33 @@ int check_input( char *name, int priority ){
     return ERR_SUCCESS;
 }
 
+
 void DestoryRunningandDispath(){
 
-    int LockResult;
-    PCB *p;
-
-    READ_MODIFY( MEMORY_TIMERQ_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
-			     &LockResult);
     if( running_process->state == WAITING ){
         printf( "Error: try to kill a process in timer_queue.\n" );
         return;
     }
+
     CALL( DeleteByPid( PList, running_process->pid ) );
-    READ_MODIFY( MEMORY_TIMERQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
-                 &LockResult );
-
-    while( IsEmptyQueue( ready_queue ) ){
-        READ_MODIFY( MEMORY_TIMERQ_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
-			         &LockResult );
-        if( ! IsEmptyQueue( timer_queue ) ){
-            CALL( Z502Idle() );
-        }
-        else
-            Z502Halt();
-        READ_MODIFY( MEMORY_TIMERQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
-			         &LockResult );
-    }
-
-    READ_MODIFY( MEMORY_READYQ_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
-			     &LockResult );
-    CALL( GetFirstPCB( &p, ready_queue ) );
-    CALL( RemoveFromQueue( ready_queue, p ) );
-    p->state = RUNNING;
-    running_process = p;
-    READ_MODIFY( MEMORY_READYQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
-		         &LockResult);
-
-    CALL( Z502SwitchContext( SWITCH_CONTEXT_KILL_MODE, &p->context ) );
-
+    DispatchProcess();
 }
+
 
 /************************************************************************
     DispatchProcess
 ************************************************************************/
-
 
 void DispatchProcess(){
 
     int LockResult;
 
     if( IsEmptyQueue( ready_queue ) ){
-        Z502Idle();
+
+        if( IsEmptyQueue( timer_queue ) )
+            Z502Halt();
+
+        CALL( Z502Idle() );
         while( IsEmptyQueue( ready_queue ) )
             CALL();
     }
@@ -215,9 +193,6 @@ void DispatchProcess(){
     READ_MODIFY( MEMORY_READYQ_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
 			     &LockResult);
 
-    if( running_process )
-        CALL( AddtoQueue( ready_queue, running_process, ORDER_OTHER ) );
-
     PCB *p;
     CALL( GetFirstPCB( &p, ready_queue ) );
     CALL( RemoveFromQueue( ready_queue, p ) );
@@ -226,7 +201,7 @@ void DispatchProcess(){
 
     READ_MODIFY( MEMORY_READYQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
                  &LockResult );
-    print_schedule( "Dispatch", p->pid );
+    //print_schedule( "Dispatch", p->pid );
 
     CALL( Z502SwitchContext( SWITCH_CONTEXT_SAVE_MODE, &p->context ) );
 }
@@ -265,7 +240,7 @@ void ResetTimer(){
     int time, delay, Z502_MODE;
     GetFirstPCB( &p, timer_queue );
     if( p ){
-        GET_TIME_OF_DAY(&time)
+        GET_TIME_OF_DAY(&time);
         delay = p->time_of_delay - time;
         if( delay > 0 )
             Z502MemoryWrite( Z502TimerStart, &delay );
@@ -280,7 +255,7 @@ void ResetTimer(){
 void print_schedule( char *act, int target ){
 
     int    LockResult;
-    PCB    *p1, *p2;
+    PCB    *p;
 
     READ_MODIFY( MEMORY_PRINTER_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
 			     &LockResult);
@@ -292,20 +267,27 @@ void print_schedule( char *act, int target ){
 
     READ_MODIFY( MEMORY_READYQ_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
 			     &LockResult);
-    p1 = ready_queue->head;
-	while( p1 ){
-		SP_setup( SP_READY_MODE, p1->pid );
-        p1 = p1->next_pcb;
+    p = ready_queue->head;
+	while( p ){
+		SP_setup( SP_READY_MODE, p->pid );
+        p = p->next_pcb;
 	}
+
+    p = suspend_queue->head;
+	while( p ){
+		SP_setup( SP_SUSPENDED_MODE, p->pid );
+        p = p->next_pcb;
+	}
+
     READ_MODIFY( MEMORY_READYQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
 			     &LockResult);
 
     READ_MODIFY( MEMORY_TIMERQ_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
 			     &LockResult);
-    p2 = timer_queue->head;
-	while( p2 ){
-		SP_setup( SP_WAITING_MODE, p2->pid );
-        p2 = p2->next_pcb;
+    p = timer_queue->head;
+	while( p ){
+		SP_setup( SP_WAITING_MODE, p->pid );
+        p = p->next_pcb;
 	}
 
     SP_print_header();
@@ -336,9 +318,10 @@ void    svc( SYSTEM_CALL_DATA *SystemCallData ) {
     //short               i;
     static short        do_print = 10;
     void                *addr;
-    char                *name;
-    int                 Time, priority, r, pid, LockResult;
-    LinkList            n;
+    char                *name, *msg, *msg_buf;
+    int                 Time, priority, r, pid,
+                        LockResult, buf_size;
+    LinkList            n = NULL;
     PCB                 *p;
 
     call_type = (short)SystemCallData->SystemCallNumber;
@@ -404,9 +387,9 @@ void    svc( SYSTEM_CALL_DATA *SystemCallData ) {
 
         case SYSNUM_GET_PROCESS_ID:
             name = (char *)SystemCallData->Argument[0];
-            if( strcmp( name, "" ) == 0 ){
+            if( strcmp( name, "" ) == 0 )
                 p = running_process;
-            }
+
             else{
                 CALL( n = SearchByPname( PList, name ) );
                 if( n != NULL )
@@ -425,26 +408,10 @@ void    svc( SYSTEM_CALL_DATA *SystemCallData ) {
             CALL( n = SearchByPid( PList, pid ) );
             if( n ){
                 p = n->data;
-                if( p->state == RUNNING )
-                    *(long *)SystemCallData->Argument[1] = ERR_SUSPEND_RUNNNING;
-
-                if( p->state == SUSPEND )
-                    *(long *)SystemCallData->Argument[1] = ERR_ALREADY_SUSPEND;
-
-                else{
-                    print_schedule("SUSPEND",p->pid);
-                    READ_MODIFY( MEMORY_READYQ_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
-                                 &LockResult);
-                    CALL( RemoveFromQueue( ready_queue, p ) );
-                    p->state = SUSPEND;
-                    READ_MODIFY( MEMORY_READYQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
-                                 &LockResult);
-                    *(long *)SystemCallData->Argument[1] = ERR_SUCCESS;
-                }
+                SuspendProcess( p, SystemCallData->Argument[1] );
             }
-            else{
+            else
                 *(long *)SystemCallData->Argument[1] = ERR_PID_NOT_FOUND;
-            }
 
             break;
 
@@ -457,19 +424,12 @@ void    svc( SYSTEM_CALL_DATA *SystemCallData ) {
                 if( p->state != SUSPEND )
                     *(long *)SystemCallData->Argument[1] = ERR_NOT_SUSPEND;
                 else{
-                    print_schedule("RESUME",p->pid);
-                    READ_MODIFY( MEMORY_READYQ_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
-                                 &LockResult);
-                    CALL( AddtoQueue( ready_queue, p, ORDER_PRIORITY ) );
-                    p->state = READY;
-                    *(long *)SystemCallData->Argument[1] = ERR_SUCCESS;
-                    READ_MODIFY( MEMORY_READYQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
-                                 &LockResult);
+                    ResumeProcess( p );
+                    *(long*)SystemCallData->Argument[1] = ERR_SUCCESS;
                 }
             }
-            else{
+            else
                 *(long *)SystemCallData->Argument[1] = ERR_PID_NOT_FOUND;
-            }
 
             break;
 
@@ -485,8 +445,7 @@ void    svc( SYSTEM_CALL_DATA *SystemCallData ) {
                 running_process->priority = priority;
             }
             else{
-                n = SearchByPid( PList, pid );
-
+                CALL( n = SearchByPid( PList, pid ) );
                 if( !n ){
                     *(long*)SystemCallData->Argument[2] = ERR_PID_NOT_FOUND;
                     break;
@@ -499,8 +458,8 @@ void    svc( SYSTEM_CALL_DATA *SystemCallData ) {
                 if( p->state == READY ){
                     READ_MODIFY( MEMORY_READYQ_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
                                  &LockResult);
-                    RemoveFromQueue( ready_queue, p );
-                    AddtoQueue( ready_queue, p, ORDER_PRIORITY );
+                    CALL( RemoveFromQueue( ready_queue, p ) );
+                    CALL( AddtoQueue( ready_queue, p, ORDER_PRIORITY ) );
                     READ_MODIFY( MEMORY_READYQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
                                  &LockResult);
                 }
@@ -509,12 +468,135 @@ void    svc( SYSTEM_CALL_DATA *SystemCallData ) {
             *(long*)SystemCallData->Argument[2] = ERR_SUCCESS;
             break;
 
+        case SYSNUM_SEND_MESSAGE:
+
+            pid = (int)SystemCallData->Argument[0];
+            msg = (char*)SystemCallData->Argument[1];
+            buf_size = (int)SystemCallData->Argument[2];
+
+            if( buf_size <= 0 || buf_size > 128 || buf_size < strlen( msg ) ){
+                *(long*)SystemCallData->Argument[3] = ERR_ILLEAGLE_BUFFER;
+                break;
+            }
+            if( pid != -1 ){
+                CALL( n = SearchByPid( PList, pid ) );
+                if( !n ){
+                    *(long*)SystemCallData->Argument[3] = ERR_PID_NOT_FOUND;
+                    break;
+                }
+            }
+
+            if( GetLength( MsgList ) > 20 ){
+                *(long*)SystemCallData->Argument[3] = ERR_OVER_CAPACITY;
+                break;
+            }
+
+            Message *m = CreateMsg( msg, buf_size, running_process->pid, pid );
+            InsertIntoList( MsgList, m );
+
+            /* Resume process which is suspended for message */
+            if( n ){
+                p = n->data;
+                if( HasPCB( suspend_queue, p ) )
+                    ResumeProcess( p );
+            }
+            else{
+                GetFirstPCB( &p, suspend_queue );
+                if( p )
+                    ResumeProcess( p );
+            }
+
+            *(long*)SystemCallData->Argument[3] = ERR_SUCCESS;
+            break;
+
+        case SYSNUM_RECEIVE_MESSAGE:
+
+            pid = (int)SystemCallData->Argument[0];
+            msg_buf = (char*)SystemCallData->Argument[1];
+            buf_size = (int)SystemCallData->Argument[2];
+
+            if( buf_size < 0 || buf_size > 128 ){
+                *(long*)SystemCallData->Argument[5] = ERR_ILLEAGLE_BUFFER;
+                break;
+            }
+
+            if( pid != -1 ){
+                CALL( n = SearchByPid( PList, pid ) );
+                if( !n ){
+                    *(long*)SystemCallData->Argument[5] = ERR_PID_NOT_FOUND;
+                    break;
+                }
+            }
+            else
+                pid = 0;
+
+            Message *msg;
+            while( !( msg = SearchMsg( pid, running_process->pid ) ) )
+                SuspendProcess( running_process, SystemCallData->Argument[5] );
+
+            if( buf_size < msg->length ){
+                *(long*)SystemCallData->Argument[5] = ERR_ILLEAGLE_BUFFER;
+                break;
+            }
+            *(int*)SystemCallData->Argument[3] = msg->length;
+            *(int*)SystemCallData->Argument[4] = msg->sender_pid;
+            strcpy( msg_buf, msg->data );
+            DeleteMsg( msg->id );
+
+            *(long*)SystemCallData->Argument[5] = ERR_SUCCESS;
+            break;
+
+
         default:
             printf( "ERROR!  call_type not recognized!\n" );
             printf( "Call_type is - %i\n", call_type);
     }                                           // End of switch
 }                                               // End of svc
 
+
+void SuspendProcess( PCB *p, long *Err ){
+
+    int LockResult;
+
+    if( p->state == SUSPEND ){
+        *Err = ERR_ALREADY_SUSPEND;
+        return;
+    }
+
+    print_schedule( "SUSPEND", p->pid );
+    READ_MODIFY( MEMORY_READYQ_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
+                 &LockResult );
+    if( p->state == RUNNING ){
+        CALL( AddtoQueue( suspend_queue, p, ORDER_OTHER ) );
+        READ_MODIFY( MEMORY_READYQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
+                     &LockResult );
+        DispatchProcess();
+    }
+    else{
+        CALL( RemoveFromQueue( ready_queue, p ) );
+        CALL( AddtoQueue( suspend_queue, p, ORDER_OTHER ) );
+    }
+    READ_MODIFY( MEMORY_READYQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
+                 &LockResult );
+    *Err = ERR_SUCCESS;
+}
+
+
+void ResumeProcess( PCB *p ){
+
+    int LockResult;
+
+    print_schedule( "RESUME", p->pid );
+    READ_MODIFY( MEMORY_READYQ_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
+                 &LockResult );
+
+    CALL( RemoveFromQueue( suspend_queue, p ) );
+    CALL( AddtoQueue( ready_queue, p, ORDER_PRIORITY ) );
+
+    READ_MODIFY( MEMORY_READYQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
+                 &LockResult );
+
+}
 
 /************************************************************************
     osInit
@@ -526,11 +608,17 @@ void    svc( SYSTEM_CALL_DATA *SystemCallData ) {
 void    osInit( int argc, char *argv[]  ) {
     INT32               i;
     /* Demonstrates how calling arguments are passed thru to here       */
+
+    /* Initial all system structures */
     CALL( InitQueue( &timer_queue, "Timer" ) );
     CALL( InitQueue( &ready_queue, "Ready" ) );
+    CALL( InitQueue( &suspend_queue, "Suspend" ) );
     CALL( PList = CreateNullList() );
+    CALL( MsgList = CreateNullList() );
     running_process = NULL;
     global_pid = 0;
+    global_msg_id = 0;
+
     PCB *p;
 
     printf( "Program called with %d arguments:", argc );
@@ -554,7 +642,7 @@ void    osInit( int argc, char *argv[]  ) {
     /*  This should be done by a "os_make_process" routine, so that
         test0 runs on a process recognized by the operating system.    */
 
-    CALL( OSCreateProcess( &p, (void *)test1h, "test1c", 0, USER_MODE ); )
+    CALL( OSCreateProcess( &p, (void *)test1j, "test1c", 0, USER_MODE ) );
     while(1){
         CALL( DispatchProcess() );
     }

@@ -17,7 +17,7 @@ protos.h
 #define  PROTOS_H
 
 #include     "syscalls.h"
-
+#include     "process.h"
 //                      ENTRIES in base.c
 
 void   interrupt_handler( void );
@@ -27,6 +27,10 @@ void   svc( SYSTEM_CALL_DATA * );
 void   osInit (int argc, char *argv[] );
 void   ResetTimer( void );
 void   ReadytoGo( void );
+void   DispatchProcess( void );
+void   SuspendProcess( PCB*, long* );
+void   ResumeProcess( PCB* );
+BOOL   DeleteMsg( int );
 //                     ENTRIES in sample.c
 
 void   sample_code(void );

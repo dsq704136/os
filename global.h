@@ -116,7 +116,7 @@ typedef         int                             BOOL;
 
 #define      MEMORY_READYQ_LOCK     0x7FE00020
 #define      MEMORY_TIMERQ_LOCK     0x7FE00030
-#define      MEMORY_PRINTER_LOCK     0x7FE00030
+#define      MEMORY_PRINTER_LOCK    0x7FE00030
 
 /*  These are the device IDs that are produced when an interrupt
     or fault occurs.                                            */
@@ -172,7 +172,8 @@ typedef         int                             BOOL;
 #define         ERR_NO_SUCH_PROCESS                     34L
 #define         ERR_SUSPEND_RUNNNING                    35L
 #define         ERR_NOT_SUSPEND                         36L
-#define         ERR_ALREADY_SUSPEND                         36L
+#define         ERR_ALREADY_SUSPEND                     37L
+#define         ERR_ILLEAGLE_BUFFER                     38L
 
 
 
