@@ -83,10 +83,12 @@ void    interrupt_handler( void ) {
     READ_MODIFY( MEMORY_TIMERQ_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
 			     &LockResult);
     ReadytoGo();
-    // Clear out this device - we're done with it
-    MEM_WRITE(Z502InterruptClear, &Index );
+
     READ_MODIFY( MEMORY_TIMERQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
 			     &LockResult);
+
+    // Clear out this device - we're done with it
+    MEM_WRITE(Z502InterruptClear, &Index );
 
 }                                       /* End of interrupt_handler */
 /************************************************************************
@@ -105,7 +107,7 @@ void ReadytoGo(){
     while( 1 ){
         GET_TIME_OF_DAY(&time);
         if( p != NULL && time >= p->time_of_delay ){
-            print_schedule( "Ready2Go", p->pid );
+            //print_schedule( "Ready2Go", p->pid );
             RemoveFromQueue( timer_queue, p );
             READ_MODIFY( MEMORY_READYQ_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
 			             &LockResult);
@@ -142,6 +144,8 @@ void    fault_handler( void )
                         device_id, status );
     // Clear out this device - we're done with it
     MEM_WRITE(Z502InterruptClear, &Index );
+
+    Z502Halt();
 }                                       /* End of fault_handler */
 
 
@@ -179,6 +183,8 @@ void DestoryRunningandDispath(){
 void DispatchProcess(){
 
     int LockResult;
+    int time;
+    short Z502_MODE;
 
     if( IsEmptyQueue( ready_queue ) ){
 
@@ -186,22 +192,29 @@ void DispatchProcess(){
             Z502Halt();
 
         CALL( Z502Idle() );
-        while( IsEmptyQueue( ready_queue ) )
+        while( IsEmptyQueue( ready_queue ) ){
             CALL();
+        }
     }
 
     READ_MODIFY( MEMORY_READYQ_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
-			     &LockResult);
+			     &LockResult );
 
     PCB *p;
     CALL( GetFirstPCB( &p, ready_queue ) );
+    READ_MODIFY( MEMORY_READYQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
+                 &LockResult  );
+
+    print_schedule( "Dispatch", p->pid );
+
+    READ_MODIFY( MEMORY_READYQ_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
+			     &LockResult );
     CALL( RemoveFromQueue( ready_queue, p ) );
     p->state = RUNNING;
     running_process = p;
 
     READ_MODIFY( MEMORY_READYQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
-                 &LockResult );
-    //print_schedule( "Dispatch", p->pid );
+                 &LockResult  );
 
     CALL( Z502SwitchContext( SWITCH_CONTEXT_SAVE_MODE, &p->context ) );
 }
@@ -254,12 +267,14 @@ void ResetTimer(){
 
 void print_schedule( char *act, int target ){
 
-    int    LockResult;
+    int    LockResult, time;
+    short  Z502_MODE;
     PCB    *p;
 
     READ_MODIFY( MEMORY_PRINTER_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
 			     &LockResult);
-
+    GET_TIME_OF_DAY( &time );
+    SP_setup( SP_TIME_MODE, time );
 	SP_setup_action( SP_ACTION_MODE, act );
 	SP_setup( SP_TARGET_MODE, target );
     if( running_process )
@@ -422,6 +437,7 @@ void    svc( SYSTEM_CALL_DATA *SystemCallData ) {
             if( n ){
                 p = n->data;
                 if( p->state != SUSPEND )
+                    //break;
                     *(long *)SystemCallData->Argument[1] = ERR_NOT_SUSPEND;
                 else{
                     ResumeProcess( p );
@@ -571,6 +587,11 @@ void SuspendProcess( PCB *p, long *Err ){
         READ_MODIFY( MEMORY_READYQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
                      &LockResult );
         DispatchProcess();
+    }
+    else if( p->state == WAITING ){
+        CALL( RemoveFromQueue( timer_queue, p ) );
+        CALL( AddtoQueue( suspend_queue, p, ORDER_OTHER ) );
+        ResetTimer();
     }
     else{
         CALL( RemoveFromQueue( ready_queue, p ) );

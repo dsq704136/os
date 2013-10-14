@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1381719815 source:d:\os\os\base.c
+1381782236 source:d:\os\os\base.c
 	<stdio.h>
 	<stdlib.h>
 	"global.h"
@@ -31,7 +31,7 @@
 
 1377968144 d:\os\os\z502.h
 
-1381545048 source:d:\os\os\test.c
+1381771890 source:d:\os\os\test.c
 	"global.h"
 	"protos.h"
 	"syscalls.h"
