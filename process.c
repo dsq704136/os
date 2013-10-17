@@ -9,14 +9,16 @@
 #include                 "protos.h"
 #include                 "linklist.h"
 
-
+/************************************************************************
+    OSCreateProcess
+        Create and initiate a process, and add it to ready queue
+************************************************************************/
 
 void OSCreateProcess( PCB **p, void *starting_address, char *name,
                       int priority, BOOL user_or_kernel){
 
     PCB *new_process = (PCB *) calloc(1, sizeof(PCB));
 
-    //int len_name = strlen( name );
     memset( new_process->name, 0x00, 64 );
     strcpy( new_process->name, name );
 
@@ -40,18 +42,17 @@ void DestoryProcess( PCB *p ){
     READ_MODIFY( MEMORY_READYQ_LOCK, DO_LOCK, SUSPEND_UNTIL_LOCKED,
                  &LockResult);
     if( RemoveFromQueue( ready_queue, p ) != 1 ){
-        printf( "ERROR" );
+        printf( "ERROR\n" );
+        //Just in case, not happened so far.
         READ_MODIFY( MEMORY_READYQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
                      &LockResult);
         return;
     }
-        //RemoveFromQueue( timer_queue, p );
 
     READ_MODIFY( MEMORY_READYQ_LOCK, DO_UNLOCK, SUSPEND_UNTIL_LOCKED,
                  &LockResult);
 
     Z502DestroyContext( &p->context );
     DeleteByPid( PList, p->pid );
-
     free( p );
 }

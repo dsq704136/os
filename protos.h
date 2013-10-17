@@ -22,15 +22,22 @@ protos.h
 
 void   interrupt_handler( void );
 void   fault_handler( void );
-void   print_schedule( char *, int );
 void   svc( SYSTEM_CALL_DATA * );
 void   osInit (int argc, char *argv[] );
-void   ResetTimer( void );
+
+// Functions wrote by Shuoqing Ding
 void   ReadytoGo( void );
+void   ResetTimer( void );
+void   StartTimer( int );
 void   DispatchProcess( void );
+void   DestoryRunningandDispath( void );
+void   SchedulerPrinter( char *, int );
 void   SuspendProcess( PCB*, long* );
 void   ResumeProcess( PCB* );
-BOOL   DeleteMsg( int );
+void   ListTest();
+void   *GetTestAddr( char* );
+int    GetTestPrintLevel( char* );
+
 //                     ENTRIES in sample.c
 
 void   sample_code(void );

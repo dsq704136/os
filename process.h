@@ -1,3 +1,16 @@
+/*********************************************************************
+
+    process.h
+
+    Author : Shuoqing Ding
+    Date   : 2013/10/14
+
+    Define PCB structure and some related global variables.
+    A PCB is a process, it contains the necessary attributes of process.
+
+*********************************************************************/
+
+
 #ifndef PROCESS_H_INCLUDED
 #define PROCESS_H_INCLUDED
 
@@ -6,11 +19,11 @@
 
 struct PCB{
     int                 pid;
-    int                 time_of_delay;
+    int                 time_of_delay;  //Time to wake up
     char                name[64];
-    INT16               state;
-    INT16               pmode;
-    INT16               priority;
+    int                 state;          //Running, Ready, Waiting
+    int                 pmode;          //UserMode or KernelMode
+    int                 priority;
     void                *context;
     struct PCB          *next_pcb;
 };

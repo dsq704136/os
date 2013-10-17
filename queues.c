@@ -44,9 +44,25 @@ BOOL IsEmptyQueue( PQueue *q ){
     return FALSE;
 }
 
+
+/************************************************************************
+    GetFirstPCB
+        Get the first PCB in given queue. First PCB may means the least
+        time_of_delay or the smallest priority.
+************************************************************************/
+
 void GetFirstPCB( PCB **pcb, PQueue *q ){
     *pcb = q->head;
 }
+
+
+/************************************************************************
+    AddtoQueue
+        Add PCB into the certain queue by given order and change
+        the state of process. If queue is timer queue then order
+        by delay_of_time. If queue is ready ready queue then order
+        by priority( smaller is greater ).
+************************************************************************/
 
 void AddtoQueue( PQueue *q, PCB *pcb, int orderBy ){
 

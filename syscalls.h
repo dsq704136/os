@@ -43,6 +43,8 @@
 #define         SYSNUM_DISK_READ                       13
 #define         SYSNUM_DISK_WRITE                      14
 #define         SYSNUM_DEFINE_SHARED_AREA              15
+#define         SYSNUM_REVOKE                          16
+
 
 // This structure defines the format used for all system calls.
 // For each call, the structure is filled in and then its address
@@ -118,6 +120,21 @@ extern int BaseThread();
                 Z502_MODE = USER_MODE;                                         \
                 free(SystemCallData);                                          \
                 }                                                              \
+
+#define         REVOKE( arg1, arg2 )                {                                 \
+                SYSTEM_CALL_DATA *SystemCallData =                             \
+                     (SYSTEM_CALL_DATA *)calloc(1, sizeof (SYSTEM_CALL_DATA)); \
+                SystemCallData->NumberOfArguments = 3;                         \
+                SystemCallData->SystemCallNumber = SYSNUM_REVOKE;              \
+                SystemCallData->Argument[0] = (long *)arg1;                    \
+                SystemCallData->Argument[1] = (long *)arg2;                    \
+                ChargeTimeAndCheckEvents( COST_OF_SOFTWARE_TRAP );             \
+                Z502_MODE = KERNEL_MODE;                                       \
+                svc(SystemCallData);                                           \
+                Z502_MODE = USER_MODE;                                         \
+                free(SystemCallData);                                          \
+                }                                                              \
+
 
 #define         CREATE_PROCESS( arg1, arg2, arg3, arg4, arg5 )   {             \
                 SYSTEM_CALL_DATA *SystemCallData =                             \

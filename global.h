@@ -174,6 +174,7 @@ typedef         int                             BOOL;
 #define         ERR_NOT_SUSPEND                         36L
 #define         ERR_ALREADY_SUSPEND                     37L
 #define         ERR_ILLEAGLE_BUFFER                     38L
+#define         ERR_NOT_SLEEP                           39L
 
 
 

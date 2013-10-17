@@ -1,3 +1,17 @@
+/*********************************************************************
+
+    queues.h
+
+    Author : Shuoqing Ding
+    Date   : 2013/10/14
+
+    Define PQueue structure and some related global variables.
+    PQueue structure is only used for PCB, all of Queues( timerQ,
+    readyQ, suspendQ ) use the same structure.
+
+*********************************************************************/
+
+
 #ifndef QUEUES_H_INCLUDED
 #define QUEUES_H_INCLUDED
 
@@ -6,7 +20,7 @@
 typedef struct{
     long                length;
     char                name[32];
-    PCB                 *head;
+    PCB                 *head;         //Point to the first PCB
 } PQueue;
 
 PQueue                *timer_queue;

@@ -63,6 +63,7 @@ extern INT16 Z502_MODE;
 /*      Prototypes for internally called routines.                  */
 
 void   test1x(void);
+void   test1m_x(void);
 void   test1j_echo(void);
 void   test2hx(void);
 void   ErrorExpected(INT32, char[]);
@@ -1101,9 +1102,68 @@ void test1l(void) {
  Write an interesting test of your own to exhibit some feature of
  your Operating System.
 
+ Show how does REVOKE work.
+
+ Z502_REG1              Child process ID
+ Z502_REG2              OUR process ID
+ Z502_REG9              Error returned
+
  **************************************************************************/
 void test1m(void) {
+
+    GET_PROCESS_ID("", &Z502_REG2, &Z502_REG9);
+    printf("Release %s:Test 1m: Pid %ld\n", CURRENT_REL, Z502_REG2);
+
+    // Make a legal target process
+    CREATE_PROCESS("test1m_a", test1m_x, LEGAL_PRIORITY_1E, &Z502_REG1,
+            &Z502_REG9);
+    SuccessExpected(Z502_REG9, "CREATE_PROCESS");
+
+    SLEEP( 100 );
+
+    //Revoke a illegal Process
+    REVOKE( 9999, &Z502_REG9 );
+    ErrorExpected( Z502_REG9, "REVOKE" );
+
+    REVOKE( Z502_REG1, &Z502_REG9 );
+    SuccessExpected(Z502_REG9, "REVOKE");
+
+    //Waiting child process end
+    SLEEP( 100 );
+
+    //Running time should be hundreds.
+    TERMINATE_PROCESS(-2, &Z502_REG9);
+    printf("ERROR: system should be terminated but isn't.\n");
 }                                               // End test1m
+
+
+/**************************************************************************
+ Test1m_x
+
+ is used as a target by the process creation programs.
+ It only sleep a long time.
+
+ Z502_REG2              OUR process ID
+ Z502_REG9              Error returned
+
+ **************************************************************************/
+
+#define         NUMBER_OF_TEST1X_ITERATIONS     10
+
+void test1m_x(void) {
+
+    GET_PROCESS_ID("", &Z502_REG2, &Z502_REG9);
+    printf("Release %s:Test 1m_x: Pid %ld\n", CURRENT_REL, Z502_REG2);
+
+    SLEEP( 10000 );
+
+    printf("Test1x, PID %ld, Ends at Time %ld\n", Z502_REG2, Z502_REG4);
+
+    TERMINATE_PROCESS(-1, &Z502_REG9);
+    printf("ERROR: Test1x should be terminated but isn't.\n");
+
+} /* End of test1x    */
+
 
 /**************************************************************************
  Test1x

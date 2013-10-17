@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1381782236 source:d:\os\os\base.c
+1381974030 source:d:\os\os\base.c
 	<stdio.h>
 	<stdlib.h>
 	"global.h"
@@ -11,12 +11,12 @@
 	"linklist.h"
 	"message.h"
 
-1381525085 d:\os\os\global.h
+1381972719 d:\os\os\global.h
 
-1378008822 d:\os\os\syscalls.h
+1381973778 d:\os\os\syscalls.h
 	"stdio.h"
 
-1381705872 d:\os\os\protos.h
+1381876820 d:\os\os\protos.h
 	"syscalls.h"
 	"process.h"
 
@@ -31,7 +31,7 @@
 
 1377968144 d:\os\os\z502.h
 
-1381771890 source:d:\os\os\test.c
+1381973538 source:d:\os\os\test.c
 	"global.h"
 	"protos.h"
 	"syscalls.h"
@@ -74,10 +74,10 @@
 	<winbase.h>
 	<sys/types.h>
 
-1381333063 d:\os\os\process.h
+1381890056 d:\os\os\process.h
 	"z502.h"
 
-1381520268 source:d:\os\os\process.c
+1381881441 source:d:\os\os\process.c
 	<string.h>
 	<stdio.h>
 	<stdlib.h>
@@ -89,7 +89,7 @@
 	"protos.h"
 	"linklist.h"
 
-1381704766 source:d:\os\os\queues.c
+1381881968 source:d:\os\os\queues.c
 	<string.h>
 	<stdio.h>
 	<stdlib.h>
@@ -100,10 +100,10 @@
 	"protos.h"
 	"queues.h"
 
-1381705859 d:\os\os\queues.h
+1381868142 d:\os\os\queues.h
 	"process.h"
 
-1381701316 source:d:\os\os\linklist.c
+1381882411 source:d:\os\os\linklist.c
 	<string.h>
 	<stdio.h>
 	<stdlib.h>
@@ -115,11 +115,11 @@
 	"message.h"
 	"linklist.h"
 
-1381520306 d:\os\os\linklist.h
+1381882420 d:\os\os\linklist.h
 	"process.h"
 	"message.h"
 
-1381719849 d:\os\os\message.h
+1381874727 d:\os\os\message.h
 
 1381719834 source:d:\os\os\message.c
 	"message.h"

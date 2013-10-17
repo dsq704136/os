@@ -37,15 +37,15 @@ int InsertIntoList( LinkList L, void *data ){
 }
 
 
-Message *SearchMsg( int sender, int receiver ){
+Message *GetMsg( int sender, int receiver ){
 
     LinkList n = MsgList->next;
     Message *m;
 
     while( n ){
         m = n->data;
-        if( ( sender == 0 || sender == m->sender_pid )
-            && ( receiver == 0 || receiver == m->receiver_pid || m->receiver_pid == -1 ) )
+        if( ( sender == -1 || sender == m->sender_pid )
+            && ( receiver == -1 || receiver == m->receiver_pid || m->receiver_pid == -1 ) )
             return m;
 
         n = n->next;
