@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1381974030 source:d:\os\os\base.c
+1383612793 source:d:\os\os\base.c
 	<stdio.h>
 	<stdlib.h>
 	"global.h"
@@ -11,16 +11,16 @@
 	"linklist.h"
 	"message.h"
 
-1381972719 d:\os\os\global.h
+1383492715 d:\os\os\global.h
 
-1381973778 d:\os\os\syscalls.h
+1381970178 d:\os\os\syscalls.h
 	"stdio.h"
 
-1381876820 d:\os\os\protos.h
+1381873220 d:\os\os\protos.h
 	"syscalls.h"
 	"process.h"
 
-1377968140 source:d:\os\os\state_printer.c
+1377964540 source:d:\os\os\state_printer.c
 	"global.h"
 	"syscalls.h"
 	"z502.h"
@@ -29,9 +29,9 @@
 	"string.h"
 	<unistd.h>
 
-1377968144 d:\os\os\z502.h
+1377964544 d:\os\os\z502.h
 
-1381973538 source:d:\os\os\test.c
+1383492124 source:d:\os\os\test.c
 	"global.h"
 	"protos.h"
 	"syscalls.h"
@@ -40,7 +40,7 @@
 	"stdlib.h"
 	"math.h"
 
-1377985590 source:d:\os\os\z502.c
+1377981990 source:d:\os\os\z502.c
 	"global.h"
 	"syscalls.h"
 	"z502.h"
@@ -62,7 +62,7 @@
 	<sys/time.h>
 	<sys/resource.h>
 
-1378007342 source:d:\os\os\sample.c
+1378003742 source:d:\os\os\sample.c
 	"global.h"
 	"syscalls.h"
 	"z502.h"
@@ -74,10 +74,10 @@
 	<winbase.h>
 	<sys/types.h>
 
-1381890056 d:\os\os\process.h
+1381886456 d:\os\os\process.h
 	"z502.h"
 
-1381881441 source:d:\os\os\process.c
+1381877841 source:d:\os\os\process.c
 	<string.h>
 	<stdio.h>
 	<stdlib.h>
@@ -89,7 +89,7 @@
 	"protos.h"
 	"linklist.h"
 
-1381881968 source:d:\os\os\queues.c
+1381878368 source:d:\os\os\queues.c
 	<string.h>
 	<stdio.h>
 	<stdlib.h>
@@ -100,10 +100,10 @@
 	"protos.h"
 	"queues.h"
 
-1381868142 d:\os\os\queues.h
+1381864542 d:\os\os\queues.h
 	"process.h"
 
-1381882411 source:d:\os\os\linklist.c
+1381878811 source:d:\os\os\linklist.c
 	<string.h>
 	<stdio.h>
 	<stdlib.h>
@@ -115,13 +115,13 @@
 	"message.h"
 	"linklist.h"
 
-1381882420 d:\os\os\linklist.h
+1381878820 d:\os\os\linklist.h
 	"process.h"
 	"message.h"
 
-1381874727 d:\os\os\message.h
+1381871127 d:\os\os\message.h
 
-1381719834 source:d:\os\os\message.c
+1381716234 source:d:\os\os\message.c
 	"message.h"
 	<stdio.h>
 	<stdlib.h>

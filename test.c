@@ -1099,10 +1099,8 @@ void test1l(void) {
 /**************************************************************************
  Test 1m
 
- Write an interesting test of your own to exhibit some feature of
- your Operating System.
-
- Show how does REVOKE work.
+ Check some illegal usage of REVOKE, and show how to revoke
+ a sleep process.
 
  Z502_REG1              Child process ID
  Z502_REG2              OUR process ID
@@ -1131,7 +1129,7 @@ void test1m(void) {
     //Waiting child process end
     SLEEP( 100 );
 
-    //Running time should be hundreds.
+    //Running time should be limited in hundreds time units.
     TERMINATE_PROCESS(-2, &Z502_REG9);
     printf("ERROR: system should be terminated but isn't.\n");
 }                                               // End test1m

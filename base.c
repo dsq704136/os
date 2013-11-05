@@ -36,7 +36,7 @@
 // These loacations are global and define information about the page table
 extern UINT16        *Z502_PAGE_TBL_ADDR;
 extern INT16         Z502_PAGE_TBL_LENGTH;
-
+UINT16               vaddr;
 
 extern void          *TO_VECTOR [];
 
@@ -51,13 +51,16 @@ char                 *call_names[] = { "mem_read ", "mem_write",
 // Define the mapping relation between name and address of tests
 char                 *test_name[]   = { "test0",  "test1a", "test1b", "test1c", "test1d",
                                         "test1e", "test1f", "test1g", "test1h", "test1i",
-                                        "test1j", "test1k", "test1l", "test1m" };
+                                        "test1j", "test1k", "test1l", "test1m", "test2a",
+                                        "test2b", "test2c" };
 void                 *test_addr[]   = { test0,    test1a,   test1b,   test1c,   test1d,
                                         test1e,   test1f,   test1g,   test1h,   test1i,
-                                        test1j,   test1k,   test1l,   test1m };
+                                        test1j,   test1k,   test1l,   test1m,   test2a,
+                                        test2b,   test2c };
 int                test_print_lvl[] = { 4,        4,        4,        2,        2,
                                         4,        2,        4,        2,        4,
-                                        2,        4,        2,        2 };
+                                        2,        4,        2,        2,        4,
+                                        4,        4 };
 int               interrupt_printer = 0;
 int               scheduler_printer = 1;
 int               memory_printer    = 1;
@@ -127,10 +130,27 @@ void    fault_handler( void )
 
     printf( "Fault_handler: Found vector type %d with value %d\n",
                         device_id, status );
+
+    if( device_id == INVALID_MEMORY ){
+        if( status >= VIRTUAL_MEM_PGS )
+            Z502Halt();
+            //Maybe there is a better way to do it
+
+        if( Z502_PAGE_TBL_LENGTH == 0 ){
+            Z502_PAGE_TBL_LENGTH = 1024;
+            //TODO what is the maximum length of table
+            Z502_PAGE_TBL_ADDR = (UINT16 *) calloc( sizeof(UINT16),
+                                                    Z502_PAGE_TBL_LENGTH );
+        }
+        Z502_PAGE_TBL_ADDR[status] = vaddr++;
+    }
+    else
+        Z502Halt();
+
     // Clear out this device - we're done with it
     MEM_WRITE(Z502InterruptClear, &Index );
 
-    Z502Halt();
+
 }                                       /* End of fault_handler */
 
 /************************************************************************
@@ -801,7 +821,7 @@ void    osInit( int argc, char *argv[] ) {
     running_process = NULL;
     global_pid = 0;
     global_msg_id = 0;
-
+    vaddr = PTBL_VALID_BIT;
     PCB *p;
 
     printf( "Program called with %d arguments:", argc );
